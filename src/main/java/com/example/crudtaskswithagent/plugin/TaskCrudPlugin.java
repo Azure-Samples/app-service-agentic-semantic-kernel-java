@@ -80,7 +80,8 @@ public class TaskCrudPlugin {
         try {
             Long taskId = Long.parseLong(id);
             return taskRepository.findById(taskId)
-                    .map(task -> task != null ? formatTask(task) : "Task not found")
+                    .map(this::formatTask)
+                    .switchIfEmpty(Mono.just("Task not found"))
                     .onErrorResume(e -> Mono.just("Error reading task: " + e.getMessage()));
         } catch (NumberFormatException e) {
             return Mono.just("Invalid task id");
@@ -109,12 +110,9 @@ public class TaskCrudPlugin {
         
         try {
             Long taskId = Long.parseLong(id);
+            
             return taskRepository.findById(taskId)
                     .flatMap(task -> {
-                        if (task == null) {
-                            return Mono.just("Task with Id " + taskId + " not found");
-                        }
-                        
                         if (title != null && !title.trim().isEmpty()) {
                             task.setTitle(title);
                         }
@@ -125,6 +123,7 @@ public class TaskCrudPlugin {
                         return taskRepository.save(task)
                                 .map(updatedTask -> "Task " + updatedTask.getId() + " updated");
                     })
+                    .switchIfEmpty(Mono.just("Task with Id " + taskId + " not found"))
                     .onErrorResume(e -> Mono.just("Error updating task: " + e.getMessage()));
         } catch (NumberFormatException e) {
             return Mono.just("Invalid task id");
@@ -150,14 +149,9 @@ public class TaskCrudPlugin {
         try {
             Long taskId = Long.parseLong(id);
             return taskRepository.findById(taskId)
-                    .flatMap(task -> {
-                        if (task == null) {
-                            return Mono.just("Task with Id " + taskId + " not found");
-                        }
-                        
-                        return taskRepository.delete(task)
-                                .then(Mono.just("Task " + taskId + " deleted"));
-                    })
+                    .flatMap(task -> taskRepository.delete(task)
+                            .then(Mono.just("Task " + taskId + " deleted")))
+                    .switchIfEmpty(Mono.just("Task with Id " + taskId + " not found"))
                     .onErrorResume(e -> Mono.just("Error deleting task: " + e.getMessage()));
         } catch (NumberFormatException e) {
             return Mono.just("Invalid task id");
@@ -168,6 +162,6 @@ public class TaskCrudPlugin {
         return String.format("Id: %d\nTitle: %s\nComplete: %s", 
                 task.getId(), 
                 task.getTitle(), 
-                task.isComplete() ? "Yes" : "No");
+                task.getComplete() ? "Yes" : "No");
     }
 }

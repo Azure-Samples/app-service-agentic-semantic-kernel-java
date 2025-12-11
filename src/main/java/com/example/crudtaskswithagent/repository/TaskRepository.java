@@ -9,6 +9,6 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface TaskRepository extends R2dbcRepository<TaskItem, Long> {
     
-    @Query("SELECT * FROM tasks ORDER BY id")
+    @Query("SELECT * FROM \"tasks\" ORDER BY \"id\"")
     Flux<TaskItem> findAllOrderById();
 }
