@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * and manages a single agent thread per instance (suitable for session-based usage).
  */
 @Service
-@Scope("prototype") // Create new instance per request
+@Scope("prototype") // Create new instance per session
 public class SemanticKernelAgentService {
     
     private static final Logger logger = LoggerFactory.getLogger(SemanticKernelAgentService.class);
